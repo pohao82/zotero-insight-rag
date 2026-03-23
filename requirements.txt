@@ -1,0 +1,21 @@
+# --- Core RAG Framework ---
+langchain-ollama
+langchain-text-splitters
+langchain-community
+
+# --- Database & Vector Search ---
+duckdb>=1.1.0
+
+# --- PDF Parsing ---
+# (Use marker-pdf for GPU/High-fidelity, pypdf for lightweight CPU)
+marker-pdf
+pypdf
+
+# --- UI & Interface ---
+streamlit
+pyyaml
+
+# --- Utilities ---
+pydantic>=2.0
+requests
+pathlib

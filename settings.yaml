@@ -1,0 +1,12 @@
+infrastructure:
+  db_path: "/home/phchang/db_zotero_rag/zotero_lieb_1650_200_550_120_m8_ef120_marker.db"
+  embedding_model: "mxbai-embed-large"
+
+agent:
+  generator:
+    model: "gpt-oss:20b"  #"llama3.1:8b"
+    temperature: 0
+  critic:
+    model: "nemotron-3-nano" 
+    temperature: 0
+  max_retries: 0
