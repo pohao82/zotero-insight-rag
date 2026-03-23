@@ -1,4 +1,5 @@
 # Zotero Semantic Search & RAG System
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Zotero Semantic Search & RAG** is an end-to-end local Retrieval-Augmented Generation (RAG) system designed for semantic search over personal scientific literature collections.
 
