@@ -90,7 +90,7 @@ class VectorDatabase:
     def create_hnsw_index(self):
         """Call this AFTER all papers are ingested for maximum efficiency."""
         print("🚀 Building optimized HNSW index (Bulk Mode)...")
-        # Drop if exists to ensure a clean, compact build
+        # Drop if exists to ensure a clean, compact build to avoid repeated indexing
         self.con.execute("DROP INDEX IF EXISTS hnsw_idx")
 
         self.con.execute("""
@@ -109,11 +109,12 @@ class VectorDatabase:
 
         # 1. Get the keys and values in a consistent order
         columns = ", ".join(data.keys())
-        # 2. Use '?' instead of ':key'
+        # 2. generate equal number of "?" for the query place holder
         placeholders = ", ".join(["?" for _ in data.keys()])
         # 3. Get the values as a list/tuple in that same order
         values = list(data.values())
 
+        #"INSERT INTO paper_chunks (key1, key2, ..) VALUES (?,?, ..)"
         sql = f"INSERT INTO paper_chunks ({columns}) VALUES ({placeholders})"
 
         self.con.execute(sql, values)
@@ -137,9 +138,10 @@ class VectorDatabase:
           'children_text': [str], # all the children belong to the same parent   
           'children_embeddings': [[float]] # all the children vectors 
          },...]
+         Each dict corresponds to one parent chunk and all its children chunks
         """
         global_index = 0
-        # loop over parents
+        # loop over parent chunks
         for p_idx, p_block in enumerate(parent_data):
 
             # Create a Pydantic object for the Parent
@@ -148,7 +150,7 @@ class VectorDatabase:
                 title=title,
                 author = authors,    # New Field
                 text=p_block['parent_text'],
-                embedding=None, # Parents dont' have a vector
+                embedding=None, # Parents dont have a vector
                 file_path=str(pdf_path),
                 chunk_index=global_index,
                 parent_id=p_idx,

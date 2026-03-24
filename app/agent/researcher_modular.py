@@ -16,7 +16,7 @@ class ResearchGenerator:
     def refine_draft(self, draft, feedback):
         return self.llm.invoke([
             SystemMessage(content=prompts.CRITIC_SYSTEM),
-            HumanMessage(content=f"Your previous answer had issues: {feedback}\n\nRewrite it correctly.")
+            HumanMessage(content=f"Your previous answer had issues: Below is the feedback: {feedback}\n\n to  your original draft: {draft}\n\nRewrite it correctly.")
         ]).content
 
     # add chat memory for cli
@@ -42,7 +42,7 @@ class ResearchCritic:
 
     def verify(self, draft, context):
         user_content = prompts.CRITIC_USER_TEMPLATE.format(
-            context=context, 
+            context=context,
             draft=draft
         )
 
@@ -77,6 +77,6 @@ class ReflectionLoop:
 
             # 3. Self-Correction step
             current_answer = self.generator.refine_draft(current_answer, feedback)
-            print(f'loop 1 ansower: {feedback}')
+            print(f'loop 1 ansower: {current_answer}')
 
         return current_answer, False

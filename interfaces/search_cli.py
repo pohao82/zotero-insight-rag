@@ -1,7 +1,7 @@
 from app.core.config import retriever_module
 
 # Chatbot with memory
-def start_chat(top_k=5,window=3):
+def start_chat(top_k=5,window=5):
     print("\n=== Physics Research Assistant (with Memory) ===")
 
     retriever = retriever_module()

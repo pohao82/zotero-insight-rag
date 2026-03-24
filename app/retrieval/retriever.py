@@ -162,8 +162,8 @@ class ResearchRetriever:
             parent_id + window
         ]).fetchall()
 
-        # Since parents are usually distinct paragraphs/sections,
-        # we join them with double newlines rather than complex snipping.
+        # Parents are usually distinct paragraphs/sections,
+        # join them with double newlines
         return "\n\n".join([r[1] for r in results])
 
 
@@ -173,7 +173,7 @@ class ResearchRetriever:
         automatically skipping any interleaved parent rows.
         """
         query = """
-            WITH ChildSequence AS (   -- Map child chunk_index to a new local sequence
+            WITH ChildSequence AS (  -- Map child chunk_index to a new local sequence
                 SELECT
                     chunk_index,
                     text,
@@ -206,7 +206,7 @@ class ResearchRetriever:
             search_area = merged_text[round(-overlap_len*1.5):] # last portion of the previous text chunck
             anchor_pos = search_area.find(anchor)
 
-            # remove overap
+            # remove overlap
             if anchor_pos != -1:
                 overlap_actual_len = len(search_area) - anchor_pos
                 merged_text += current_text[overlap_actual_len:]

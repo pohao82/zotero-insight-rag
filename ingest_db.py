@@ -21,7 +21,7 @@ DB_DIR = Path("/home/phchang/db_zotero_rag")
 BASE_NAME = "zotero_lieb_1650_200_550_120_m8_ef120_test"
 
 # Stored parsed texts for reuse (marker is expensive) 
-PARSED_CACHE = DB_DIR / f"{MODE}_cache_test"
+PARSED_CACHE = DB_DIR / f"{MODE}_cache"
 DB_PATH = DB_DIR / f"{BASE_NAME}_{MODE}.db" 
 
 EMBED_MODEL = "mxbai-embed-large"
@@ -61,9 +61,11 @@ def get_parsed_text(parser, pdf_path, item_key, cache_dir):
     os.makedirs(cache_dir, exist_ok=True)
     cache_path = Path(cache_dir) / f"{item_key}.md"
 
+    # read the parsed md file if already exist and return
     if cache_path.exists():
         return cache_path.read_text(encoding="utf-8")
 
+    # parsed the new doc and store in cache folder for future use
     print(f"  -> [{MODE}] Parsing {item_key}...")
     text = parser.parse_to_text(pdf_path)
     cache_path.write_text(text, encoding="utf-8")
@@ -80,11 +82,12 @@ def process_item(db, parser, item):
         return False
 
     try:
-        # 1. Parsing & Cleaning
+        # Parsing
         text = get_parsed_text(parser, pdf_path, item_key, PARSED_CACHE)
+        # Cleaning
         text = clean_scientific_text(text)
 
-        # 2. Hierarchical Chunking
+        # Hierarchical Chunking
         parents = parent_splitter.split_text(text)
         hierarchical_data = []
 
@@ -120,7 +123,7 @@ def main():
     # Handle Reset
     if args.reset and DB_PATH.exists():
         print(f"⚠️ Reset flag detected. Removing {DB_PATH}...")
-        DB_PATH.unlink()
+        DB_PATH.unlink() # delete if choose to reset
 
     # Initialize components
     db = VectorDatabase(db_path=str(DB_PATH))
@@ -129,7 +132,7 @@ def main():
 
     print("🔍 Fetching Zotero library metadata...")
     library_items = zotero.get_library_metadata()
-    indexed_keys = db.get_indexed_keys() # Get keys already in DB to skip
+    indexed_keys = db.get_indexed_keys() # Get keys already in DB for skipping
 
     # Filter items: if not resetting, only process what's missing
     to_process = [it for it in library_items 
