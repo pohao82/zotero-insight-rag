@@ -2,8 +2,11 @@ from app.core.config import create_research_engine, retriever_module
 
 def main(question):
 
-    reflection_loop, _ = create_research_engine()
+    #reflection_loop, _ = create_research_engine()
+    max_retries=1
+    graph_loop, _ = create_research_engine(overrides=None, max_retries=max_retries)
     retriever = retriever_module()
+
     top_k=5
     window=2
     _, sources, context_map = retriever.get_relevant_context(question, top_k=top_k, window=window)
@@ -13,8 +16,24 @@ def main(question):
         context += f'\n{source_i}\n{context_i}'
     print(context)
 
-    max_retries=0
-    answer, verified = reflection_loop.run(question, context, context_map, max_retries=max_retries)
+    # langGraph
+    #  ResearchState(TypedDict):
+    initial_input = {
+        "question": question, 
+        "context": context,
+        "iterations": 0,
+        "verified": False,
+        "feedback": ""
+    }
+
+    # Invoke the graph (returns the final dictionary of the State)
+    final_state = graph_loop.invoke(initial_input)
+
+    # Extract the specific data you need
+    answer = final_state["draft"]
+    verified = final_state["verified"]
+    feedback = final_state["feedback"]
+
 
     # print only cited contexts
     import re
@@ -29,7 +48,7 @@ def main(question):
             answer = answer.replace(c,f'\n\n{c}:\n{context_map[c]}')
     #
 
-    print(f"\n\n[{'✅' if verified else '⚠️'}] ANSWER:\n{answer}")
+    print(f"\n\n[{'✅' if verified else '⚠️'}] ANSWER:\n{answer} \n FEEDBACK:\n {feedback}")
 
 if __name__ == "__main__":
     # example question

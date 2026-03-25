@@ -71,6 +71,7 @@ with st.sidebar:
         "gen_model": gen_model,
         "gen_temp": gen_temp,
         "crit_model": crit_model,
+        "max_retries": max_retries,
     }
 
     metadata_filters = {"title": selected_titles} if selected_titles else None
@@ -94,7 +95,8 @@ if prompt := st.chat_input("Search your library..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    loop, _ = create_research_engine(overrides=config_overrides)
+    #loop, _ = create_research_engine(overrides=config_overrides)
+    app, _ = create_research_engine(overrides=config_overrides)
 
     with st.chat_message("assistant"):
         with st.status("Searching library...", expanded=True) as status:
@@ -112,6 +114,7 @@ if prompt := st.chat_input("Search your library..."):
                 #cited_context = context_text 
                 verified = True
                 cited_context = "" 
+                feedback = ""
 
                 for source_tag in context_map:
                     cited_context += '\n\n'+'-'*70 
@@ -119,14 +122,38 @@ if prompt := st.chat_input("Search your library..."):
                     cited_context += '-'*70 
                     cited_context += context_map[source_tag]
 
+            # Use llm
             else:
                 st.write(f"Reasoning with {gen_model}...")
-                answer, verified = loop.run(prompt, context_text, context_map, max_retries=max_retries)
+                # simple reflection loop
+                #answer, verified = loop.run(prompt, context_text, context_map, max_retries=max_retries)
 
-                # Extract cited sources for the LLM mode
+                # langGraph
+                #  ResearchState(TypedDict):
+                initial_input = {
+                    "question": prompt,
+                    "context": context_text,
+                    "iterations": 0,
+                    "verified": False,
+                    "feedback": ""
+                }
+
+                # Invoke the graph (returns the final dictionary of the State)
+                final_state = app.invoke(initial_input)
+
+                # Extract the specific data you need
+                answer = final_state["draft"]
+                verified = final_state["verified"]
+                feedback = final_state["feedback"]
+                #-----------------------
+
+                # Extract cited sources for the LLM mode using tags [SourceN]
                 regex = r'([\[【(]Source\d+[\]】)])'
                 cited_tags = re.findall(regex, answer)
-                cited_context = "".join([context_map.get(c, "") for c in cited_tags])
+                cited_tags = list(set(cited_tags))
+                print(f"cited tags: {cited_tags}")
+                cited_context = "".join([f"{c}:\n{context_map.get(c, "")}\n\n" for c in cited_tags])
+
                 status.update(label="Analysis Complete", state="complete")
 
         if search_mode=="Semantic Search Only":
@@ -145,6 +172,11 @@ if prompt := st.chat_input("Search your library..."):
             should_expand = (search_mode == "Semantic Search Only")
             with st.expander("📚 View Cited Sources",expanded=should_expand):
                 st.code(wrap_text(cited_context), language=None)
+
+        # from critic
+        if feedback:
+            with st.expander("📚 View Feedback"):
+                st.code(wrap_text(feedback), language=None)
 
         # SAVE STATE: Store components separately to prevent formatting bugs
         st.session_state.messages.append({

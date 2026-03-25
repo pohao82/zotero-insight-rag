@@ -7,7 +7,7 @@ def start_chat(has_memory=False,max_retries=0):
     print("\n=== Physics Research Assistant ===")
 
     chat_memory = ChatMemory(window_size=0)
-    loop, generator = create_research_engine()
+    graph_loop, generator = create_research_engine(overrides=None, max_retries=max_retries)
     retriever = retriever_module()
 
     while True:
@@ -30,13 +30,31 @@ def start_chat(has_memory=False,max_retries=0):
                 user_input, top_k=5, window=2, filter_dict=metadata_filters, mode="standard"
             )
 
-            verified = False
-            answer, verified = loop.run(search_query, context,max_retries)
+            #verified = False
+            #answer, verified = loop.run(search_query, context, max_retries)
+
+            # langGraph
+            #  ResearchState(TypedDict):
+            initial_input = {
+                "question": search_query, 
+                "context": context,
+                "iterations": 0,
+                "verified": False,
+                "feedback": ""
+            }
+
+            # Invoke the graph (returns the final dictionary of the State)
+            final_state = graph_loop.invoke(initial_input)
+
+            # Extract the specific data you need
+            answer = final_state["draft"]
+            verified = final_state["verified"]
+            #feedback = final_state["feedback"]
 
             regex = r'([\[【(]Source\d+[\]】)])'
             cited_tags = re.findall(regex, answer)
-            #cited_context = "".join([f"{cited_tags[c]}\n"+context_map.get(c, "") for c in cited_tags])
-            cited_context = "".join([context_map.get(c, "") for c in cited_tags])
+            cited_tags = list(set(cited_tags))
+            cited_context = "".join([f"{c}:\n{context_map.get(c, "")}\n\n" for c in cited_tags])
 
             # Update Memory
             if has_memory:
