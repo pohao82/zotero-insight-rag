@@ -95,7 +95,6 @@ if prompt := st.chat_input("Search your library..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    #loop, _ = create_research_engine(overrides=config_overrides)
     app, _ = create_research_engine(overrides=config_overrides)
 
     with st.chat_message("assistant"):
@@ -129,7 +128,7 @@ if prompt := st.chat_input("Search your library..."):
                 #answer, verified = loop.run(prompt, context_text, context_map, max_retries=max_retries)
 
                 # langGraph
-                #  ResearchState(TypedDict):
+                # ResearchState(TypedDict):
                 initial_input = {
                     "question": prompt,
                     "context": context_text,
@@ -145,7 +144,6 @@ if prompt := st.chat_input("Search your library..."):
                 answer = final_state["draft"]
                 verified = final_state["verified"]
                 feedback = final_state["feedback"]
-                #-----------------------
 
                 # Extract cited sources for the LLM mode using tags [SourceN]
                 regex = r'([\[【(]Source\d+[\]】)])'

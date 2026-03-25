@@ -1,9 +1,9 @@
 # Zotero Semantic Search & RAG System
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Zotero Semantic Search & RAG** is an end-to-end local Retrieval-Augmented Generation (RAG) system designed for semantic search over personal scientific literature collections.
+**Agentic RAG for Scientific Literature** is an end-to-end fully local Retrieval-Augmented Generation system built with **LangGraph**, DuckDB + VSS (HNSW), and Ollama.
 
-The project was built to support daily use in computational physics research, where answering technical questions often requires retrieving precise passages from dozens of papers rather than generating summaries from general knowledge. The system integrates the Zotero Local API, layout-aware PDF parsing, vector search, and optional LLM reasoning into a modular pipeline optimized for accuracy, traceability, and offline use.
+Zotero-Insight-RAG was created for daily use in computational physics research, where answering technical questions requires retrieving precise passages from dozens of papers rather than generic summaries. The system integrates the Zotero Local API, layout-aware PDF parsing (`marker-pdf`), smart hierarchical chunking with neighbor expansion, vector search, and a **stateful LangGraph-powered Generator ↔ Critic reflection loop** into a modular, offline-first pipeline optimized for accuracy, traceability, and real-world research workflows.
 
 ## 📺 Demos
 
@@ -17,6 +17,10 @@ The project was built to support daily use in computational physics research, wh
 * **Dual-Mode Retrieval**:
   - **Semantic Search**: Sub-second retrieval over 100+ of papers (no LLM overhead)
   - **Full RAG**: LLM-powered reasoning with automatic source verification
+
+- **LangGraph Agentic Loop**:
+  - Full state-machine implementation using LangGraph for clean conditional routing (critic score → re-search / re-write query / return)
+  - Persistent memory across steps + easy extension points for future tools (web search, Zotero API calls, etc.)
 
 * **Smart Chunking Strategies**:
   - Hierarchical parent-child for multi-hop queries
@@ -36,7 +40,7 @@ The project was built to support daily use in computational physics research, wh
   - Direct source display with exact quoted passages
   - Verification badges (✅/⚠️) for quality signaling
 
-* **Metadata-Aware Search**: Filter by paper title
+* **Metadata-Aware Search**: Filter by paper title (experimental)
 
 ---
 ## 🏗️ Architecture
@@ -149,10 +153,10 @@ pip install -r requirements.txt
 ├── app/
 │   ├── ingestion/       # PDF parsing & DuckDB+VSS schema
 │   ├── retrieval/       # Hybrid search & HNSW configuration
-│   ├── engine/          # LLM configuration (config.py)
+│   ├── core/            # LLM configuration (config.py)
 │   ├── agent/           # Generator/Critic modular logic
-│   ├── interfaces/      # CLI tools (single_query, search, chat)
 │   └── utils/           # Zotero API & Query distillation helpers
+├── experimental/        # experimental CLI tools (single_query, search, chat)
 ├── streamlit_app.py     # Main GUI Entry Point
 ├── ingest_db.py         # Database build and sync utility
 └── settings.yaml        # Shared application configuration
@@ -198,10 +202,10 @@ or
 streamlit run RAG_Zotero/streamlit_app.py
 ```
 
-### CLI Tools
-* **Semantic Search Only**: `python -m app.interfaces.search_cli`
-* **Full RAG Chat**: `python -m app.interfaces.chat_cli`
-* **Simple Query example**: `python -m app.interfaces.single_query`
+### experimental CLI Tools
+* **Semantic Search Only**: `python -m app.experimental.search_cli`
+* **Full RAG Chat**: `python -m app.experimental.chat_cli`
+* **Simple Query example**: `python -m app.experimental.single_query`
 
 ---
 ## 🐳 Docker & DGX spark Integration

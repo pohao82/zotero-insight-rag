@@ -9,21 +9,18 @@ class ResearchState(TypedDict):
     iterations: int
     verified: bool
 
-# Wrap Classes into Nodes
+# Wrap existing functions into nodes
 # _node(state, func/obj)
 def draft_node(state: ResearchState, generator):
-    # Calls your existing .draft() method
     answer = generator.draft(state["question"], state["context"])
     return {"draft": answer, "iterations": state.get("iterations", 0) + 1}
 
 def critique_node(state: ResearchState, critic):
-    # Calls your existing .verify() method
     feedback = critic.verify(state["draft"], state["context"])
     is_passed = "PASSED" in feedback.upper()
     return {"feedback": feedback, "verified": is_passed}
 
 def refine_node(state: ResearchState, generator):
-    # Calls your existing .refine_draft() method
     refined = generator.refine_draft(state["draft"], state["feedback"])
     return {"draft": refined, "iterations": state["iterations"] + 1}
 
@@ -47,7 +44,6 @@ def create_research_graph(generator, critic, max_retries):
 
     # Route from drafter based on max_retries
     workflow.add_conditional_edges("drafter", route_after_draft)
-    #workflow.add_edge("drafter", "critic")
 
     # 3. Add Conditional Routing (The Reflection Loop)
     def should_continue(state):
