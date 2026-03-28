@@ -3,8 +3,8 @@ from app.core.config import create_research_engine, retriever_module
 def main(question):
 
     #reflection_loop, _ = create_research_engine()
-    max_retries=1
-    graph_loop, _ = create_research_engine(overrides=None, max_retries=max_retries)
+    max_retries=0
+    graph_loop, _ = create_research_engine(overrides=None)
     retriever = retriever_module()
 
     top_k=5
@@ -23,7 +23,8 @@ def main(question):
         "context": context,
         "iterations": 0,
         "verified": False,
-        "feedback": ""
+        "feedback": "",
+        "max_retries": max_retries
     }
 
     # Invoke the graph (returns the final dictionary of the State)

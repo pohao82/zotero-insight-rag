@@ -8,6 +8,7 @@ class ResearchState(TypedDict):
     feedback: str
     iterations: int
     verified: bool
+    max_retries: int
 
 # Wrap existing functions into nodes
 # _node(state, func/obj)
@@ -25,7 +26,7 @@ def refine_node(state: ResearchState, generator):
     return {"draft": refined, "iterations": state["iterations"] + 1}
 
 # construct workflow graph
-def create_research_graph(generator, critic, max_retries):
+def create_research_graph(generator, critic):
     workflow = StateGraph(ResearchState)
 
     # 1. Add Nodes (Passing your class instances into the functions)
@@ -38,7 +39,7 @@ def create_research_graph(generator, critic, max_retries):
 
     # New Router function to decide: Critic or END?
     def route_after_draft(state):
-        if max_retries == 0:
+        if state["max_retries"] == 0:
             return END
         return "critic"
 
@@ -47,7 +48,7 @@ def create_research_graph(generator, critic, max_retries):
 
     # 3. Add Conditional Routing (The Reflection Loop)
     def should_continue(state):
-        if state["verified"] or state["iterations"] > max_retries:
+        if state["verified"] or state["iterations"] > state["max_retries"]:
             return END
         return "refiner"
 

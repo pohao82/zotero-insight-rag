@@ -7,7 +7,7 @@ def start_chat(has_memory=False,max_retries=0):
     print("\n=== Physics Research Assistant ===")
 
     chat_memory = ChatMemory(window_size=0)
-    graph_loop, generator = create_research_engine(overrides=None, max_retries=max_retries)
+    graph_loop, generator = create_research_engine(overrides=None)
     retriever = retriever_module()
 
     while True:
@@ -40,7 +40,8 @@ def start_chat(has_memory=False,max_retries=0):
                 "context": context,
                 "iterations": 0,
                 "verified": False,
-                "feedback": ""
+                "feedback": "",
+                "max_retries": max_retries
             }
 
             # Invoke the graph (returns the final dictionary of the State)
