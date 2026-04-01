@@ -135,10 +135,10 @@ class ResearchRetriever:
                 )
 
             # Label it clearly for the Generator llm
-            context_text += f"\n--- {source_tag} ---\nTITLE: {title}\nCONTENT:\n{expanded_text}\n"
+            context_text += f"\n--- {source_tag} ---\n**TITLE**: {title}\n\n**CONTENT**:\n\n{expanded_text}\n"
             sources.add(title)
 
-            expanded_text = f"\nTITLE: {title}\nCONTENT:\n{expanded_text}\n"
+            expanded_text = f"\n**TITLE:** {title}\n\n**CONTENT**:\n{expanded_text}\n"
             context_map[source_tag] = expanded_text
 
         return context_text, list(sources), context_map

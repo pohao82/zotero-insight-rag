@@ -19,3 +19,8 @@ pyyaml
 pydantic>=2.0
 requests
 pathlib
+
+# --- FastAPI ---
+fastapi 
+# ASGI server to run the FastAPI application.
+uvicorn

@@ -37,21 +37,23 @@ def create_research_engine(overrides=None):
     generator = ResearchGenerator(gen_llm)
     critic = ResearchCritic(crit_llm)
 
-    # The Orchestrator loop
-    #loop = ReflectionLoop(generator, critic)
-    #return loop, generator
-
     # Replace ReflectionLoop with LangGraph
     graph_app = create_research_graph(generator, critic)
     return graph_app, generator
 
 
-def retriever_module():
+def retriever_module(db_path=None, embedding_model=None):
 
     # VDB refrieval infrastructure
     cfg = load_config()
-    db = VectorDatabase(cfg['infrastructure']['db_path'])
-    embeddings = OllamaEmbeddings(model=cfg['infrastructure']['embedding_model'])
+
+    if not db_path:
+        db_path = cfg['infrastructure']['db_path']
+    if not embedding_model:
+        embedding_model = cfg['infrastructure']['embedding_model']
+
+    db = VectorDatabase(db_path)
+    embeddings = OllamaEmbeddings(model=embedding_model)
     retriever = ResearchRetriever(db, embeddings)
 
     return retriever 

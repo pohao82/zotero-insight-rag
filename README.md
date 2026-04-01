@@ -1,46 +1,75 @@
 # Zotero Semantic Search & RAG System
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Agentic RAG for Scientific Literature** is an end-to-end fully local Retrieval-Augmented Generation system built with **LangGraph**, DuckDB + VSS (HNSW), and Ollama.
+**Zotero Agentic RAG for Scientific Literature** — a fully local, production-oriented Retrieval-Augmented Generation system specialized for complex scientific papers.
 
-Zotero-Insight-RAG was created for daily use in computational physics research, where answering technical questions requires retrieving precise passages from dozens of papers rather than generic summaries. The system integrates the Zotero Local API, layout-aware PDF parsing (`marker-pdf`), smart hierarchical chunking with neighbor expansion, vector search, and a **stateful LangGraph-powered Generator ↔ Critic reflection loop** into a modular, offline-first pipeline optimized for accuracy, traceability, and real-world research workflows.
+The system integrates the **Zotero Local API** with **layout-aware PDF parsing** (`marker-pdf`), custom regex post-processing, smart hierarchical chunking, DuckDB + VSS (HNSW) vector search, and a **stateful LangGraph-powered Generator ↔ Critic reflection loop**. It also includes a FastAPI service layer for programmatic access and decoupled deployment.
+
+Built for and used daily in computational physics research, where answering technical questions often requires retrieving precise passages from dozens of multi-column papers containing equations and tables. Beyond building the system, the focus is on measurable improvements: I evaluated how parsing quality and preprocessing directly affect embedding alignment and retrieval accuracy.
+
+### Key Contributions & System Insights
+
+## 🌟 Key Contributions
+
+- Identified PDF parsing quality as a key bottleneck in scientific RAG systems and analyzed its downstream impact on retrieval accuracy  
+- Demonstrated that layout-aware parsing significantly improves retrieval on complex documents (tables, equations, multi-column text)  
+- Designed a lightweight evaluation workflow enabling rapid iteration and system-level analysis  
+- Built a modular RAG pipeline with LangGraph orchestration and FastAPI-based deployment
+
+The system prioritizes **retrieval quality over model complexity**, reflecting how real production ML systems are built and optimized in practice.
 
 ## 📺 Demos
 
-| Semantic Search | Simple Generation | Reflection Loop |
-| :---: | :---: | :---: |
-| ![Semantic Search](./assets/search.gif) | ![Generation](./assets/gen.gif) | ![Reflection](./assets/loop.gif) |
+|                       Semantic Search                        |                      Simple Generation                       |                       Reflection Loop                       |
+| :----------------------------------------------------------: | :----------------------------------------------------------: | :---------------------------------------------------------: |
+|           ![Semantic Search](./assets/search.gif)            |               ![Generation](./assets/gen.gif)                |              ![Reflection](./assets/loop.gif)               |
 | *Sub-second retrieval across 200+ papers using DuckDB HNSW.* | *Direct answering using LLM synthesis of retrieved context.* | *Source verification and fact-checking via a Critic model.* |
 
 ## 🌟 Key Features
 
-* **Dual-Mode Retrieval**:
-  - **Semantic Search**: Sub-second retrieval over 100+ of papers (no LLM overhead)
-  - **Full RAG**: LLM-powered reasoning with automatic source verification
+- **Dual-Mode Retrieval**
+  - **Semantic Search**: Sub-second vector search over 200+ papers (no LLM overhead)  
+  - **Full RAG**: LLM-based synthesis with optional source verification  
 
-- **LangGraph Agentic Loop**:
-  - Full state-machine implementation using LangGraph for clean conditional routing (critic score → re-search / re-write query / return)
-  - Persistent memory across steps + easy extension points for future tools (web search, Zotero API calls, etc.)
+- **Agentic Pipeline (LangGraph)**
+  - Modular state-machine workflow with Generator ↔ Critic loop  
+  - Conditional routing (re-search / refine / return)  
+  - Easily extensible for additional tools (e.g., web search, Zotero API)
 
-* **Smart Chunking Strategies**:
-  - Hierarchical parent-child for multi-hop queries
-  - Standard + ±N neighbor expansion for precise retrieval
-  - Empirically validated: ±2 neighbors significantly improves coherence vs isolated chunks
+- **Efficient Context Retrieval**
+  - Standard chunking with ±N neighbor expansion for semantic continuity  
+  - Improves coherence compared to isolated chunk retrieval  
 
-* **Context Expansion**: Automatically retrieves neighboring chunks to preserve semantic continuity across paragraph boundaries
+- **Layout-Aware PDF Processing**
+  - `marker-pdf` preserves multi-column layouts, tables, and equations  
+  - Reduces noise from flattened text and improves embedding quality  
+  - Regex-based cleanup removes parsing artifacts (e.g., HTML tags)
 
-* **Production PDF Parsing**:
-  - `marker-pdf` handles multi-column scientific papers, equations, tables
-  - Layout-aware extraction prevents gibberish from 2-column formats
-  - **Custom post-processing**: HTML tag filtering (regex post-processing) removes `<sup>`, `<sub>` artifacts that contaminate embeddings
-  - Fallback to `pypdf` for speed on simple documents
+- **Source Attribution & Verification**
+  - Extracts and displays cited passages from retrieved documents  
+  - Provides quick validation of answer grounding  
 
-* **Rigorous Source Attribution**:
-  - Automatic citation extraction from LLM responses
-  - Direct source display with exact quoted passages
-  - Verification badges (✅/⚠️) for quality signaling
+- **Local-First Architecture**
+  - Fully local inference via Ollama (no external API calls)  
+  - DuckDB + VSS enables fast, in-process vector search  
 
 * **Metadata-Aware Search**: Filter by paper title (experimental)
+
+---
+### 📊 Parsing Quality as a Bottleneck
+
+Scientific PDFs often contain multi-column layouts, tables, and equations that are poorly handled by standard extraction tools.
+
+| Equations | Tables |
+|----------|--------|
+| <img src="./assets/equations.png" width="400"> | <img src="./assets/tables.png" width="500"> |
+
+- **Standard parsing** flattens tables into linear text, mixing columns and introducing noise  
+- **Layout-aware parsing** preserves structure, semantic boundaries, and LaTeX equations  
+
+👉 Improved structural fidelity leads to better embedding alignment and more accurate retrieval.
+
+📄 See [docs/evaluation.md](./docs/evaluation.md) for details.
 
 ---
 ## 🏗️ Architecture
@@ -63,59 +92,42 @@ graph LR
 * **Vector Database**: DuckDB with the VSS (Vector Similarity Search) extension for efficient, local, and persistent storage.
 * **Local Inference**: Powered by Ollama to ensure data privacy and offline capability.
 
----
-## 🧠 Key Design Decisions
+### Flexible Deployment Architecture
 
-### Chunking Strategy: Hierarchical vs Standard + Neighbors
+The system supports a **dual-mode execution model**, enabling both tightly integrated workflows and decoupled service-based deployment.
+#### 1. Integrated Mode (Direct Library)
 
-After empirical testing, I found that **standard chunking with ±2 neighbor expansion** outperforms parent-child hierarchical chunking for targeted information retrieval:
+In this mode, the Streamlit UI invokes the LangGraph engine directly within the same process.
 
-- **Parent-child**: Better for complex multi-hop reasoning requiring broad context.
-- **Standard + neighbors**: Better for precise fact extraction while maintaining semantic continuity.
-- **Result**: System supports both modes; users can choose based on query type.
+**Use Case:** Rapid prototyping and research workflows, where fast iteration and dynamic model switching (e.g., Llama-3.1 ↔ GPT-OSS) are required.
+**Trade-off:** Increased local resource overhead, as the UI and inference pipeline share the same process and memory space.
 
-### LLM-Optional Architecture: Semantic Search is Often Enough
+#### 2. Service Mode (FastAPI Layer)
 
-The system supports two operational modes:
+The system exposes the retrieval and RAG pipeline through a FastAPI backend, enabling a service-oriented architecture.
 
-1. **Semantic Search Only**: Pure vector similarity retrieval without LLM inference.
-2. **Full RAG**: LLM-powered synthesis with optional verification.
-
-- **Empirical finding**: For most research queries, **semantic search alone provides sufficient precision**. Questions like "what papers discuss spin Hall effect?" or "experimental methods for measuring Néel temperature" are answered directly by retrieving relevant passages — no generation needed.
-
-- **Decision**: The generator is **optional, not required**. Users can:
-    - Start with fast semantic search (sub-second, zero LLM cost)
-    - Escalate to RAG only when synthesis across multiple sources is needed
-    - Inspect retrieved sources directly rather than relying on LLM summarization
-
-This architecture prioritizes **retrieval quality over generation complexity**, recognizing that for information-seeking tasks, finding the right passages matters more than rephrasing them.
+**Deployment Pattern:** Decouples the inference layer (“brain”) from the interface (“client”), aligning with standard production architectures.
+**Performance:** Reduces end-to-end latency by keeping the LLM and vector database resident in memory, avoiding repeated model initialization and cold-start overhead.
+**Constraint:** Uses a fixed-engine configuration for stability. Model selection is controlled via `settings.yaml` rather than runtime switching, ensuring consistent performance and reproducibility.
 
 ---
-### Reflection Loop: When Self-Critique Hurts
+## 🧠 Design Notes
 
-For queries that do use the generator, the system includes an optional Generator → Critic verification loop. However, **empirical evaluation showed the critic model frequently rejects correct initial responses** for retrieval tasks, adding latency without improving accuracy.
+Key design decisions (chunking strategy, LLM usage, reflection loop) are documented here:
 
-**Root cause**: Critics trained on general reasoning tasks don't align well with retrieval-specific quality metrics. A factually correct answer citing relevant sources can be flagged as "unverified" due to phrasing differences or conservative thresholds.
-
-**Decision**: Reflection loop is configurable but **disabled by default**. For information retrieval, direct source inspection by the user is more reliable than automated verification. The critic remains available for experimentation on synthesis-heavy tasks where self-correction may add value.
-
-### Why Local Inference?
-
-Running LLMs via Ollama (vs API calls) provides:
-- **Data privacy**: Research notes never leave your machine
-- **Zero marginal cost**: No per-query API fees
-- **Offline capability**: Full functionality without internet
-- **Model flexibility**: Easy swapping between llama3, gpt-oss:20b, etc.
+📄 [docs/design.md](./docs/design.md)
 
 ---
 ## 🛠️ Tech Stack
 
-* **Data Source**: Zotero 7+ Local API.
-* **PDF Processing**: `marker-pdf` (Layout-aware) or `pypdf` (Fast/CPU).
-* **Embeddings**: `mxbai-embed-large` (1024-dimensional vectors).
-* **LLMs**: Llama 3.1 or configurable via Ollama.
-* **UI Framework**: Streamlit.
-* **Database**: DuckDB + VSS.
+- **Data Source**: Zotero 7/8 + Local API
+- **PDF Processing**: `marker-pdf` (layout-aware) or `pypdf` (fast/CPU fallback)
+- **Embeddings**: `mxbai-embed-large` (1024-dimensional vectors)
+- **Vector Store**: DuckDB + VSS (in-process, low-latency retrieval)
+- **LLMs**: Llama 3.1 or configurable via Ollama
+- **Orchestration**: LangGraph (modular RAG pipeline with agent/critic loop)
+- **API Layer**: FastAPI (service-mode deployment and inference endpoint)
+- **UI Framework**: Streamlit
 
 ---
 ## 🚀 Getting Started
@@ -152,11 +164,13 @@ pip install -r requirements.txt
 ```text
 ├── app/
 │   ├── ingestion/       # PDF parsing & DuckDB+VSS schema
+│   ├── api/             # FastAPI
 │   ├── retrieval/       # Hybrid search & HNSW configuration
 │   ├── core/            # LLM configuration (config.py)
 │   ├── agent/           # Generator/Critic modular logic
 │   └── utils/           # Zotero API & Query distillation helpers
 ├── experimental/        # experimental CLI tools (single_query, search, chat)
+├── evaluation/          
 ├── streamlit_app.py     # Main GUI Entry Point
 ├── ingest_db.py         # Database build and sync utility
 └── settings.yaml        # Shared application configuration
@@ -191,7 +205,6 @@ python ingest_db.py
 ```
 
 *Configure `chunk_size` and `chunk_overlap` within `ingest_db.py` to tune granularity*.
-
 ### Running the UI
 Launch the Streamlit dashboard:
 ```bash
@@ -234,7 +247,6 @@ make sure the following empty folders exist insider data/ to avoid permssion iss
 or Change ownership for all the folders need to be modifed from docker
 ```sudo chown -R $(id -u):$(id -g) ~/.cache/huggingface ~/db_zotero_rag $(pwd)```
 
-
 # ⚙️ Configuration (settings.yaml)
 The system's behavior is managed via settings.yaml. This allows you to swap models and update paths without touching the core logic.
 
@@ -264,7 +276,7 @@ Key Parameters Explained:
 ## 🎯 Current Status
 
 **Production-ready for daily research use:**
-- ✅ 100+ papers indexed from my Zotero library
+- ✅ 200+ papers indexed from my Zotero library
 - ✅ Sub-second semantic search
 - ✅ Multi-model RAG with source verification
 - ✅ Daily use in active computational research workflow
@@ -278,4 +290,3 @@ Key Parameters Explained:
 - [ ] BibTeX Export: Allow users to export search result citations directly into .bib format for LaTeX integration.
 - [ ] Metadata filters: Filter by author, year, or Zotero tags for scoped retrieval
 - [ ] RAG Evaluation Framework: Integrate RAGAS to implement objective evaluation metrics (Faithfulness, Answer Relevance) tailored to physics-domain queries.
-- [ ] Knowledge Graph Visualization: Implement a graph-based UI to visualize citation networks and shared semantic themes between retrieved papers.

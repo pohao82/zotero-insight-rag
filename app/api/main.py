@@ -9,7 +9,7 @@ from app.core.config import create_research_engine, retriever_module
 app = FastAPI(title="Zotero RAG API Service")
 
 # Initialize engines once at startup
-# Note: create_research_engine now returns (langgraph_app, generator)
+# Note: create_research_engine returns (langgraph_app, generator)
 graph_engine, _ = create_research_engine()
 retriever = retriever_module()
 
@@ -20,7 +20,7 @@ class ResearchRequest(BaseModel):
     max_retries: int = 0
     # mode: "Semantic Search Only" or "Research Assistant (LLM)"
     search_mode: str = "Research Assistant (LLM)"
-    mode: str = "standard"
+    mode: str = "standard" # chunking mode
     metadata_filters: Optional[Dict[str, Any]] = None
 
 @app.get("/metadata/titles")
@@ -32,8 +32,6 @@ async def get_titles():
         return [row[0] for row in rows]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
 
 @app.post("/research")
 async def run_research(req: ResearchRequest):
