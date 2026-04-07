@@ -2,6 +2,7 @@
 langchain-ollama
 langchain-text-splitters
 langchain-community
+langgraph
 
 # --- Database & Vector Search ---
 duckdb>=1.1.0

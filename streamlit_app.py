@@ -53,7 +53,6 @@ settings_path = current_dir / "settings.yaml"
 with open(settings_path, "r") as f:
     config_defaults = yaml.safe_load(f)
 
-# Assuming cfg is your loaded settings.yaml
 gen_llm_default = config_defaults['agent']['generator']['model']
 gen_temp_default = config_defaults['agent']['generator']['temperature']
 crit_llm_default = config_defaults['agent']['critic']['model']
@@ -82,9 +81,10 @@ with st.sidebar:
         crit_index = 0
         status_text = "✨ Managed by DGX"
     else:
-        LOCAL_GEN_OPTIONS = ["gpt-oss:20b", "llama3.1:8b"]
-        LOCAL_CRIT_OPTIONS = ["nemotron-3-nano", "gpt-oss:120b"]
-        # Use full lists and try to match the YAML default index
+        LOCAL_GEN_OPTIONS = config_defaults["models"]["generator_options"] #["gpt-oss:20b", "llama3.1:8b", ...]
+        LOCAL_CRIT_OPTIONS = config_defaults["models"]["critic_options"]  #["nemotron-3-nano", "gpt-oss:120b", ...]
+
+        # Use full lists
         display_gen_options = LOCAL_GEN_OPTIONS
         display_crit_options = LOCAL_CRIT_OPTIONS
 

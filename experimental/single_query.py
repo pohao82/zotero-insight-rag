@@ -2,7 +2,6 @@ from app.core.config import create_research_engine, retriever_module
 
 def main(question):
 
-    #reflection_loop, _ = create_research_engine()
     max_retries=0
     graph_loop, _ = create_research_engine(overrides=None)
     retriever = retriever_module()

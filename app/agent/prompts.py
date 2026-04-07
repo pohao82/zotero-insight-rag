@@ -13,6 +13,11 @@ GENERATOR_SYSTEM = (
     """
 )
 
+REFINER_SYSTEM = """
+You are a Physics Research Assistant. You are correcting a draft based on peer review feedback.
+Ensure the final version is grounded ONLY in the context and fixes all cited errors.
+"""
+
 CRITIC_SYSTEM = (
     "You are a rigorous Physics Peer Reviewer. Your task is to verify the 'Groundedness' "
     "and 'Citation Accuracy' of research drafts. You are extremely pedantic. "
@@ -29,4 +34,3 @@ Check:
 2. Are the citations actually in the context?
 3. Is there any hallucination?
 """
-

@@ -25,4 +25,4 @@ docker run --gpus all -it --rm \
   -e XDG_CACHE_HOME=/workspace/data/hf_cache \
   \
   -w /workspace \
-  nvcr.io/nvidia/pytorch:25.11-py3
+  nvcr.io/nvidia/pytorch:26.03-py3

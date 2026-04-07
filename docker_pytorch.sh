@@ -16,17 +16,12 @@ echo "Using Global HF Cache: $GLOBAL_HF_CACHE"
 # Ensure the global cache directory exists on the host
 mkdir -p "$GLOBAL_HF_CACHE"
 
-# --- Docker Run Command ---
+# --- 2. Docker Run ---
 docker run --gpus all -it --rm \
   --name zotero_rag_engine \
-  --cap-add=SYS_ADMIN \
-  -e NVIDIA_DISABLE_REQUIRE=1 \
-  -e LD_LIBRARY_PATH=/usr/local/cuda/lib64 \
-  -e NVIDIA_VISIBLE_DEVICES=all \
-  -e NVIDIA_DRIVER_CAPABILITIES=compute,utility \
   --ipc=host \
   --network host \
-  --env NVIDIA_DISABLE_REQUIRE=true \
+  --cap-add=SYS_ADMIN \
   --user "$(id -u):$(id -g)" \
   -v "${ZOTERO_PATH}":/workspace/data/Zotero \
   -v "${DATABASE_PATH}":/workspace/data/database \

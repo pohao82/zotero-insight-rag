@@ -1,0 +1,9 @@
+# --- for API keys ---
+python-dotenv
+
+# --- google API ---
+langchain-google-genai
+
+# --- OpenAI API ---
+langchain-openai
+openai<2.0.0

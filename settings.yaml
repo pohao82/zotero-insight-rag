@@ -4,9 +4,25 @@ infrastructure:
 
 agent:
   generator:
-    model: "gpt-oss:20b"  #"llama3.1:8b"
+    model:  "llama3.1:8b" #"gpt-oss:20b"  "gemini-2.5-flash"  "gpt-4o" 
     temperature: 0
   critic:
-    model: "nemotron-3-nano" 
+    model: "nemotron-3-nano"  #"gemini-2.5-flash" 
     temperature: 0
   max_retries: 0
+
+# list of models
+models:
+  generator_options:
+    - gpt-oss:20b
+    - llama3.1:8b
+    - gemini-2.5-flash
+    - gpt-4o
+
+  critic_options:
+    - nemotron-3-nano
+    - gpt-oss:120b
+    - gpt-4
+
+  default_generator: llama3.1:8b
+  default_critic: nemotron-3-nano
